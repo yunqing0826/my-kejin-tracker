@@ -1,9 +1,15 @@
+沒問題！我發現之前的版本中，雖然寫了分頁代碼，但變數設定成 20 筆且邏輯在某些情況下會被分析面板擋住。
+
+我已經調整了程式碼，將 rowsPerPage 正式修改為 30 筆，並優化了分頁列的顯示位置與樣式，確保在統計數據增加時，下方列表依然清晰好操作。
+
+完整程式碼 V11.1 (30筆分頁版)
+HTML
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>課金監測終端 V11.0 - 數據分析版</title>
+    <title>課金監測終端 V11.1 - 數據分析版</title>
     <style>
         body { font-family: 'Segoe UI', 'PingFang TC', sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background: radial-gradient(circle at center, #350000 0%, #000000 100%); color: #ffffff; min-height: 100vh; }
         .card { background: rgba(15, 15, 15, 0.95); padding: 25px; border-radius: 20px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.4); border: 2px solid #800; margin-bottom: 30px; }
@@ -41,16 +47,18 @@
         .backup-zone { margin-top: 40px; padding-top: 20px; border-top: 1px solid #444; display: flex; gap: 10px; justify-content: center; }
         .btn-backup { background: #222; color: #888; border: 1px solid #444; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; }
         
-        /* 分頁 */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; padding: 10px; }
-        .btn-page { background: #444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-page:disabled { opacity: 0.3; cursor: not-allowed; }
+        /* 分頁控制項樣式優化 */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 20px; margin: 25px 0; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .btn-page { background: linear-gradient(180deg, #555, #333); color: white; border: 1px solid #666; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-page:active { transform: scale(0.95); }
+        .btn-page:disabled { opacity: 0.2; cursor: not-allowed; }
+        #pageInfo { font-family: 'Courier New', Courier, monospace; color: #ffcc00; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>課金監測終端 V11.0</h2>
+    <h2>課金監測終端 V11.1</h2>
     <div class="total-section">累計金額：$<span id="totalAmount">0</span></div>
     <div id="statusMsg" class="status-msg">掃描紀錄中...</div>
 
@@ -89,9 +97,9 @@
     </div>
 
     <div class="pagination" id="pageCtrl" style="display:none;">
-        <button class="btn-page" id="prevBtn" onclick="changePage(-1)">◀</button>
-        <span id="pageInfo" style="font-size:14px; font-family:monospace;">1 / 1</span>
-        <button class="btn-page" id="nextBtn" onclick="changePage(1)">▶</button>
+        <button class="btn-page" id="prevBtn" onclick="changePage(-1)">上一頁</button>
+        <span id="pageInfo">1 / 1</span>
+        <button class="btn-page" id="nextBtn" onclick="changePage(1)">下一頁</button>
     </div>
 
     <div class="backup-zone">
@@ -103,7 +111,7 @@
 <script>
     let records = []; 
     let currentPage = 1;
-    const rowsPerPage = 20;
+    const rowsPerPage = 30; // 已修改為 30 筆
 
     window.onload = function() {
         document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
@@ -119,7 +127,6 @@
         const channel = document.getElementById('channel').value;
         const itemName = document.getElementById('itemName').value || "未命名";
         const amount = parseFloat(document.getElementById('amount').value);
-        
         if (!date || isNaN(amount) || amount <= 0) return alert("請輸入正確資訊！");
         
         records.push({ id: Date.now(), date, itemName, channel, amount });
@@ -145,6 +152,8 @@
     function changePage(step) {
         currentPage += step;
         refreshUI();
+        // 切換頁面後自動捲動回表格頂部，方便閱讀
+        document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth' });
     }
 
     function refreshUI() {
@@ -157,29 +166,27 @@
         let yearData = {};
         let monthData = {};
 
-        // 計算統計與總額
         records.forEach(r => {
             total += r.amount;
-            const y = r.date.substring(0, 4); // YYYY
-            const m = r.date.substring(0, 7); // YYYY-MM
+            const y = r.date.substring(0, 4);
+            const m = r.date.substring(0, 7);
             yearData[y] = (yearData[y] || 0) + r.amount;
             monthData[m] = (monthData[m] || 0) + r.amount;
         });
 
-        // 渲染年度統計
         yearStatsEl.innerHTML = Object.keys(yearData).sort().reverse().map(y => `
             <div class="stat-tag"><div class="stat-label">${y}年</div><span>$${yearData[y].toLocaleString()}</span></div>
         `).join('');
 
-        // 渲染月度統計 (顯示最近的幾個)
         monthStatsEl.innerHTML = Object.keys(monthData).sort().reverse().map(m => `
             <div class="stat-tag"><div class="stat-label">${m}</div><span>$${monthData[m].toLocaleString()}</span></div>
         `).join('');
 
-        // 處理表格分頁與排序
+        // 分頁與排序邏輯
         const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
         const totalPages = Math.ceil(sorted.length / rowsPerPage) || 1;
         if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
 
         const start = (currentPage - 1) * rowsPerPage;
         const pageData = sorted.slice(start, start + rowsPerPage);
@@ -193,7 +200,6 @@
             row.insertCell(4).innerHTML = `<button class="btn-delete" onclick="deleteRecord(${r.id})">刪除</button>`;
         });
 
-        // 更新分頁控制
         const pageCtrl = document.getElementById('pageCtrl');
         if (records.length > rowsPerPage) {
             pageCtrl.style.display = "flex";
