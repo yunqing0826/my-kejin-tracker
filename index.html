@@ -260,10 +260,10 @@
     function updateStatus(total) {
         const msg = document.getElementById('statusMsg');
         if (total === 0) msg.innerText = ">> 終端啟動中，等待數據登錄...";
-        else if (total < 2000) { msg.innerText = ">> 小課怡情 不痛不癢"; msg.style.color = "#00ffcc"; }
-        else if (total < 10000) { msg.innerText = ">> 為愛發電 小額贊助"; msg.style.color = "#3399ff"; }
-        else if (total < 50000) { msg.innerText = ">> 愛情來了 錢包扁了"; msg.style.color = "#ff9900"; }
-        else if (total < 88000) { msg.innerText = ">> 嫁妝已備 等他入贅"; msg.style.color = "#f1c40f"; }
+        else if (total < 2000) { msg.innerText = "✨ 小課怡情 不痛不癢 ✨"; msg.style.color = "#00ffcc"; }
+        else if (total < 10000) { msg.innerText = "💳 為愛發電 小額贊助 💳"; msg.style.color = "#3399ff"; }
+        else if (total < 50000) { msg.innerText = "💸 愛情來了 錢包扁了 💸"; msg.style.color = "#ff9900"; }
+        else if (total < 88000) { msg.innerText = "💓 嫁妝已備 等他入贅 💓"; msg.style.color = "#f1c40f"; }
         else { msg.innerText = ">> 這輩子就栽在他手裡了"; msg.style.color = "#ff0000"; }
     }
 
